@@ -1,0 +1,12 @@
+First line is Area settings:
+
+1. Amount of blocks/tiles
+2. X TestySpawn
+3. Y TestySpawn
+
+Following lines are the actual blocks/tiles
+1. Block ID - Eg. Block1, 1
+2. Xpos - Think Cartesian Plane
+3. Ypos - Think Cartesian Plane
+4. Collision??? - "Y" or "N"
+5. Opacity - To be changed to images
