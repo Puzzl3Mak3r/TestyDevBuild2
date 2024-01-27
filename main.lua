@@ -1,104 +1,3 @@
--- OVERWORLD CODE!!!!!
-io.output():setvbuf("no")
-display.setStatusBar(display.HiddenStatusBar)
-physics = require "physics"
-physics.start()
-physics.setGravity( 0, 0 )
-require "extensions.string"
-require "extensions.io"
-require "extensions.table"
-require "extensions.math"
-require "extensions.display"
-fullw                        = display.actualContentWidth
-fullh                        = display.actualContentHeight
-cx                           = display.contentCenterX
-cy                           = display.contentCenterY
-
--- Load CSV file as table of tables, where each sub-table is a row
-lines = io.readFileTable( --[["To be sorted out"]] "Overworld/Area_0.csv" , system.ResourceDirectory )
-
-local rows = {}
-
-for i=1, #lines do	
-  rows[#rows+1] = string.fromCSV(lines[i])
-end
-
--- Debug step to see what we extracted from the CSV file; Note that I made it green to skip "print"
--- table.print_r(rows)
-
--- Top of your code:
-local curRow = 1
-local forLooper
-local id = 0
-local rectTable = {} -- for keeping references on created rectangles
-local filename
-
-local function buildLevel(build)
-  --[[ Core Stuff ]]-- =========================================================
-  
-
-
-  
-
-  -- [[ Actual Loader Function ]]-- =========================================================
-
-  if( curRow <= #rows ) then
-    table.print_r(rows[curRow])
-    local forLooper = tonumber((rows[1][1]))
-    local spawnX, spawnY = tonumber((rows[1][2])), tonumber((rows[1][3]))
-    
-    while (forLooper>=1) do
-
-      -- In your loop:
-
-      -- Create 'id' to make array assortment easier
-      id = forLooper + 1
-
-      if not rows[id] then
-        break
-      end -- this new line will stop the loop if index is nil
-                                  
-      -- Make the Blocks
-      local rectID = tostring( id )
-      local xOffset = cx + (tonumber(rows[id][1])) * 50
-      local yOffset = cy + (tonumber(rows[id][2])) * 50
-
-      if tostring(build) == "YES" then
-        if ((tostring(rows[id][3])) == ".7") then
-          rectTable[rectID] = display.newImageRect( "Assets/OLD_tiles1.png", 50, 50 )
-        elseif ((tostring(rows[id][3])) == ".3") then
-          rectTable[rectID] = display.newImageRect( "Assets/OLD_tiles2.png", 50, 50 )
-        else
-          rectTable[rectID] = display.newImageRect( "Assets/OLD_tiles1.png", 50, 50 )
-        end
-        rectTable[rectID].x, rectTable[rectID].y = xOffset, yOffset
-
-        if ((tostring(rows[id][4])) == "Y") then
-          physics.addBody( (rectTable[rectID]), "static", { density=1.0, friction=100, bounce=-10} )
-        end
-        
-      elseif tostring(build) == "NO" then
-        display.remove( rectTable[rectID] )
-      end
-      -- Repeat until finished CSV
-      forLooper = forLooper-1
-    end
-  end
-end
-
-
-local M = {}
-
-function M.LoadWorld()
-  buildLevel("YES")
-end
-
-function M.unLoadWorld()
-  buildLevel("NO")
-end
-
-return M
-
 --[[ Main core stuff ]]--    =========================================================
 
 physics = require "physics"
@@ -137,11 +36,66 @@ local platform                     = ""
 local spawnX, spawnY               = cx, cy
 local BackGround                   = display.newRect( cx, cy, 3*screenX, 3*screenY)
 local velocity                     = 1
+local v1, v2, v3                   = false, false, false
+local Countv1, Countv2, Countv3    = false, false, false
 local playerMoving                 = false
 BackGround.fill                    = {0.5,0.7,1}
 playingStatus                      = false
 physics.setGravity                   (0,10)
 
+--[[local function playVideo(videoName)
+  local video = require('video')
+  local scene = display.newGroup()
+
+  local x, y = display.contentCenterX, display.contentCenterY
+  local w, h = 480, 270
+  local filename = 'testVid.mp4' --tostring(videoName)
+  local duration = 242 -- seconds
+  local function playbackended(watchedToEnd)
+    display.newText(
+      {
+        x = x,
+        y = y,
+        fontSize = 30,
+        align = 'center',
+        font = native.systemFont,
+        text = 'Thanks for watching!'
+      }
+    )
+    if watchedToEnd then
+      print('You watched to the end, congrats!!! :-)')
+    else
+      print('You stopped watching in the middle of playback, I guess you didn\'t like the video much :-(')
+    end
+  end
+
+  local player = video:new()
+  player:scaffold(x, y, w, h, filename, duration, playbackended)
+  player:render(scene)
+  player:audioMixin('media/audio.mp3')
+
+  Runtime:addEventListener('key',
+    function(event)
+      if event.phase == 'up' then
+        if event.keyName == 'space' then
+          if not player._isPlaying then
+            player:resume()
+          else
+            player:pause()
+          end
+        elseif event.keyName == 'k' then
+          player:play()
+        elseif event.keyName == 's' then
+          player:stop()
+        elseif event.keyName == 'i' then
+          for k, v in pairs(player:info()) do
+            print(k, v)
+          end
+        end
+      end
+    end
+  )
+end]]
 
 --[[ Choose Level ]]--       =========================================================
 
@@ -190,7 +144,7 @@ function PreBuild()
     rightArrow =display.newImageRect( 'Assets/UI/arrowRight.png', 150, 100 )
     leftArrow.x, leftArrow.y = cx+650,screenY-(cy/2.5)
     rightArrow.x, rightArrow.y = cx-650,screenY-(cy/2.5)
-    leftArrow.name,rightArrow.name = "left","right"
+    leftArrow.name,rightArrow.name = "right","left"
   end
 end
 
@@ -310,101 +264,144 @@ local TestySheet = graphics.newImageSheet( "Assets/Sprites/Testy.png", TestyFram
   --[[ Main Level Functions ]]-- ===================================================
 
   -- Make the player jump
-    local jumps = 0
+  local jumps = 0
 
-    local function ResetJumps()
-      if playerVy == 0 then
-        jumps = 1
-        print( "Jump has been reset" )
-      end
+  local function ResetJumps()
+    if playerVy == 0 then
+      jumps = 1
+      print( "Jump has been reset" )
     end
+  end
 
-    local function Jump( event )
-      if platform == "mobile" then
-        if(event.phase == "began") then
-          if ((holdingLeft or holdingRight)== false) then
-            if jumps == 1 then
-              player:setLinearVelocity(0,-270)
-              print( "Player Jumped" )
-              jumps = jumps - 1
-            else
-              ResetJumps()
-            end
+  local function Jump( event )
+    if platform == "mobile" then
+      if(event.phase == "began") then
+        if ((holdingLeft or holdingRight)== false) then
+          if jumps == 1 then
+            player:setLinearVelocity(0,-270)
+            print( "Player Jumped" )
+            jumps = jumps - 1
+          else
+            ResetJumps()
           end
         end
+      end
+    else
+      if jumps == 1 then
+        player:setLinearVelocity(0,-270)
+        print( "Player Jumped" )
+        jumps = jumps - 1
       else
-        if jumps == 1 then
-          player:setLinearVelocity(0,-270)
-          print( "Player Jumped" )
-          jumps = jumps - 1
-        else
-          ResetJumps()
-        end
+        ResetJumps()
       end
     end
+  end
 
   -- Moving left & right
-    local function moveLeft()
-      player.x = player.x - 2
-      newPlayer.xScale = -0.3
-      print( "moved left" )
-    end
-    local function moveRight()
-      player.x = player.x + 2
-      newPlayer.xScale = 0.3
-      print( "moved right" )
-    end
-
-  -- Animations!!!!!
-    local function AnimateMoving()
-      if playerMoving == true then
+  local count = 0
+  local function delayVelocity()
+    count = count + 1
+    -- To delay because this function is called ~30 times a second
+    if count == 33 then
+      count = 0
+      -- animate the player moving
+      if playerMoving then
         newPlayer:setSequence("run")
         newPlayer:play()
-        print( "runAnimation" )
+      end
+      -- slowly increasing the velocity
+      if v1 == false then
+        v1 = true
+      elseif v2 == false then
+        v2 = true
+      elseif v3 == false then
+        v3 = true
       end
     end
+  end
 
-    local function falling()
-      -- Falling animation
-      if ( velocity == 1 ) then
-        if (playerVy >= 0) then
-          newPlayer:setSequence("fall")
-          newPlayer:play("fall")
-        end
-        if (playerVy <= 0) then
-          newPlayer:setSequence("jump")
-          newPlayer:play("jump")
-        end
-        if (playerVy == 0) then
-          newPlayer:setSequence("idle")
-          newPlayer:play("idle")
-        end
-      end
+  local function startVelocity()
+    -- delaying, so not updating ~30 times 
+    delayVelocity()
+    if velocity == 2.5 then
+      -- do nothing
+    elseif v3 then
+      velocity = 2.5
+      print( 'changed velocity to 2.5' )
+    elseif v2 then
+      velocity = 2
+      print( 'changed velocity to 2' )
+    elseif v1 then
+      velocity = 1.5
+      print( 'changed velocity to 1.5' )
+    else
+      velocity = 1.1
+      print( 'changed velocity to 1.1' )
     end
+  end
 
-    local function moveTesty()
-      if holdingLeft and holdingRight then
-      elseif holdingLeft then
-        moveLeft()
-      elseif holdingRight then
-        moveRight()
+  local function resetVelocity()
+    v1, v2, v3 = false, false, false
+    velocity = 1
+    print( 'changed velocity to 1' )
+  end
+
+  local function moveLeft()
+    player.x = player.x - (3*velocity)
+    newPlayer.xScale = -0.3
+    print( "moved left" )
+  end
+  local function moveRight()
+    player.x = player.x + (3*velocity)
+    newPlayer.xScale = 0.3
+    print( "moved right" )
+  end
+
+  local function falling()
+    -- Falling animation
+    if ( velocity == 1 ) then
+      if (playerVy >= 0) then
+        newPlayer:setSequence("fall")
+        newPlayer:play("fall")
+      end
+      if (playerVy <= 0) then
+        newPlayer:setSequence("jump")
+        newPlayer:play("jump")
+      end
+      if (playerVy == 0) then
+        newPlayer:setSequence("idle")
+        newPlayer:play("idle")
       end
     end
+  end
+
+  local function moveTesty()
+    if holdingLeft and holdingRight then
+      playerMoving = false
+    elseif holdingLeft then
+      moveLeft()
+      startVelocity()
+    elseif holdingRight then
+      moveRight()
+      startVelocity()
+    end
+  end
 
   local function ConfirmTouch(event)
     if(event.phase == "moved" or event.phase == "began")then
-      if event.target.name == "left" and event.target.name == "right" then
-      elseif (event.target.name == "left") then
-        holdingLeft = true
+      -- if event.target.name == "left" and event.target.name == "right" then
+      if (event.target.name == "left") then
+        holdingLeft, playerMoving = true, true
       elseif (event.target.name == "right") then
-        holdingRight = true
+        holdingRight, playerMoving = true, true
       end
       print("touched")
     end
     if(event.phase == "ended")then
+      resetVelocity()
       holdingLeft, holdingRight = false, false
-      newPlayer:setSequence("idle")
-      newPlayer:play()
+      -- newPlayer:setSequence("idle")
+      -- newPlayer:play()
     end
   end
 
@@ -426,14 +423,18 @@ local TestySheet = graphics.newImageSheet( "Assets/Sprites/Testy.png", TestyFram
       end
       if pressedKeys["a"] and pressedKeys["d"] then
         playerMoving = false
+        if velocity ~= 1 then resetVelocity() end
       elseif pressedKeys["a"] then
+        playerMoving = true
         moveLeft()
-        playerMoving = true
+        startVelocity()
       elseif pressedKeys["d"] then
-        moveRight()
         playerMoving = true
+        moveRight()
+        startVelocity()
       elseif not pressedKeys["a"] and not pressedKeys["d"] then
         playerMoving = false
+        if velocity ~= 1 then resetVelocity() end
       end
     end
 
@@ -444,23 +445,23 @@ local TestySheet = graphics.newImageSheet( "Assets/Sprites/Testy.png", TestyFram
   end
 
   --[[ Delays And Listeners ]]-- ===================================================
-    Runtime:addEventListener("enterFrame", WhenPlaying )
-    Runtime:addEventListener("enterFrame", falling )
-      
+  Runtime:addEventListener("enterFrame", WhenPlaying )
+  Runtime:addEventListener("enterFrame", falling )
+    
 
-    if platform == "mobile" then
-      BackGround:addEventListener( "touch", Jump )
-      rightArrow:addEventListener( "touch", ConfirmTouch )
-      leftArrow:addEventListener( "touch", ConfirmTouch )
-      Runtime:addEventListener( "enterFrame", moveTesty )
+  if platform == "mobile" then
+    BackGround:addEventListener( "touch", Jump )
+    rightArrow:addEventListener( "touch", ConfirmTouch )
+    leftArrow:addEventListener( "touch", ConfirmTouch )
+    Runtime:addEventListener( "enterFrame", moveTesty )
 
-      -- rightArrow:addEventListener("touch", ConfirmTouch)
-      -- leftArrow:addEventListener("touch", ConfirmTouch)
-    end
-    if platform == "pc" then
-      Runtime:addEventListener( "enterFrame", onEnterFrame )
-      Runtime:addEventListener( "key", onKeyEvent )
-    end
+    -- rightArrow:addEventListener("touch", ConfirmTouch)
+    -- leftArrow:addEventListener("touch", ConfirmTouch)
+  end
+  if platform == "pc" then
+    Runtime:addEventListener( "enterFrame", onEnterFrame )
+    Runtime:addEventListener( "key", onKeyEvent )
+  end
 end
 
 
