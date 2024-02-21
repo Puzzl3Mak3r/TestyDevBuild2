@@ -1,12 +1,17 @@
---[[ Main core stuff ]]--    =========================================================
+--------------------------------------------------------------------------------
+-- [[ Main Core Stuff ]] --
+--------------------------------------------------------------------------------
 
 physics = require "physics"
 physics.start()
 system.activate( "multitouch" )
-local Test = require("load_world")
+local OverWorld = require("load_world")
 
 
---[[ To read the CSV file(s) ]]-- =========================================================
+
+--------------------------------------------------------------------------------
+-- [[ Read CSV tools ]] --
+--------------------------------------------------------------------------------
 
 io.output():setvbuf("no")
 display.setStatusBar(display.HiddenStatusBar)
@@ -19,7 +24,9 @@ require "extensions.display"
 
 
 
---[[ Parameters ]]--         =========================================================
+--------------------------------------------------------------------------------
+-- [[ Parameters / Variables ]] --
+--------------------------------------------------------------------------------
 
 local fullw                        = display.actualContentWidth
 local fullh                        = display.actualContentHeight
@@ -43,61 +50,11 @@ BackGround.fill                    = {0.5,0.7,1}
 playingStatus                      = false
 physics.setGravity                   (0,10)
 
---[[local function playVideo(videoName)
-  local video = require('video')
-  local scene = display.newGroup()
 
-  local x, y = display.contentCenterX, display.contentCenterY
-  local w, h = 480, 270
-  local filename = 'testVid.mp4' --tostring(videoName)
-  local duration = 242 -- seconds
-  local function playbackended(watchedToEnd)
-    display.newText(
-      {
-        x = x,
-        y = y,
-        fontSize = 30,
-        align = 'center',
-        font = native.systemFont,
-        text = 'Thanks for watching!'
-      }
-    )
-    if watchedToEnd then
-      print('You watched to the end, congrats!!! :-)')
-    else
-      print('You stopped watching in the middle of playback, I guess you didn\'t like the video much :-(')
-    end
-  end
 
-  local player = video:new()
-  player:scaffold(x, y, w, h, filename, duration, playbackended)
-  player:render(scene)
-  player:audioMixin('media/audio.mp3')
-
-  Runtime:addEventListener('key',
-    function(event)
-      if event.phase == 'up' then
-        if event.keyName == 'space' then
-          if not player._isPlaying then
-            player:resume()
-          else
-            player:pause()
-          end
-        elseif event.keyName == 'k' then
-          player:play()
-        elseif event.keyName == 's' then
-          player:stop()
-        elseif event.keyName == 'i' then
-          for k, v in pairs(player:info()) do
-            print(k, v)
-          end
-        end
-      end
-    end
-  )
-end]]
-
---[[ Choose Level ]]--       =========================================================
+--------------------------------------------------------------------------------
+-- [[ Choosing Level ]] --
+--------------------------------------------------------------------------------
 
 local function removeLevels()
   display.remove(levela)
@@ -116,17 +73,21 @@ local function levelSelected(event)
     BuildTheLevel()
     levelchosen = "Loader"
     removeLevels()
-    Test.unLoadWorld()
+    OverWorld.unLoadWorld()
+    OverWorld.unLoadPlayer()
   end
 end
 
 
 
---[[ PreBuild ]]--           =========================================================
+--------------------------------------------------------------------------------
+-- [[ Pre - Build ]] --
+--------------------------------------------------------------------------------
 
 function PreBuild()
-
-  --[[ DevGround ]]-- =========================================================
+  --------------------------------------------------------------------------------
+  -- [[ Dev Platform ]] --
+  --------------------------------------------------------------------------------
 
   local ground = display.newRect( cx, screenY-30, 2000, 60 )
   physics.addBody( ground, "static", { density=1.0, friction=100, bounce=0} )
@@ -136,8 +97,9 @@ function PreBuild()
 
 
 
-  --[[ Last Stuff Overlays ]]-- =========================================================
-
+  --------------------------------------------------------------------------------
+  -- [[ Last Stuff Overlays ]] --
+  --------------------------------------------------------------------------------
     
   if platform == "mobile" then
     leftArrow =display.newImageRect( 'Assets/UI/arrowLeft.png', 150, 100 )
@@ -150,22 +112,29 @@ end
 
 
 
---[[ Game Code ]]--          =========================================================
+--------------------------------------------------------------------------------
+-- [[ Game Code ]] --
+--------------------------------------------------------------------------------
 
 function StartPlayingPlatformer()
---[[ Player ]]--         =========================================================
+  --------------------------------------------------------------------------------
+  -- [[ Player ]] --
+  --------------------------------------------------------------------------------
 
--- Load the sheets
-player = display.newRect( cx, cy, 100, 70)
-player.name = "real"
-player.fill = {1,1,0}
-playerVx, playerVy = 0, 0
-physics.addBody( player )
-player.isFixedRotation=true
-player.postCollision = nil
+  -- Load the sheets
+  player = display.newRect( cx, cy, 100, 70)
+  player.name = "real"
+  player.fill = {1,1,0}
+  playerVx, playerVy = 0, 0
+  physics.addBody( player )
+  player.isFixedRotation=true
+  player.postCollision = nil
   
 
---[[ Testy Animation ]]-- ========================================================
+
+--------------------------------------------------------------------------------
+-- [[ Testy Animation ]] --
+--------------------------------------------------------------------------------
 
 local TestyFrameSize =
 {
@@ -359,17 +328,17 @@ local TestySheet = graphics.newImageSheet( "Assets/Sprites/Testy.png", TestyFram
 
   local function falling()
     -- Falling animation
-    if ( velocity == 1 ) then
+    if ( velocity == 1 ) then          -- How it works - If player isn't moving left or right (velocity), then it initiates the next bit
       if (playerVy >= 0) then
-        newPlayer:setSequence("fall")
+        newPlayer:setSequence("fall")  -- Fall anim for - Y velocity
         newPlayer:play("fall")
       end
       if (playerVy <= 0) then
-        newPlayer:setSequence("jump")
+        newPlayer:setSequence("jump")  -- Jump anim for + Y velocity
         newPlayer:play("jump")
       end
       if (playerVy == 0) then
-        newPlayer:setSequence("idle")
+        newPlayer:setSequence("idle")  -- idle anim for 0 Y velocity -- May actually remove this to return to defaults(?)
         newPlayer:play("idle")
       end
     end
@@ -466,11 +435,15 @@ end
 
 
 
---[[ Level Builder ]]--      =========================================================
+--------------------------------------------------------------------------------
+-- [[ Level Builder ]] --
+--------------------------------------------------------------------------------
 
 function BuildTheLevel()
       
-  --[[ Level Loader ]]-- =========================================================
+  --------------------------------------------------------------------------------
+  -- [[ Load the Level ]] --
+  --------------------------------------------------------------------------------
 
   -- Load CSV file as table of tables, where each sub-table is a row
   local lines = io.readFileTable( "OldDebugTest.csv", system.ResourceDirectory )
@@ -497,7 +470,9 @@ function BuildTheLevel()
   local downR = { 0,-50, 0,50, -50,50, }
   local vert  = {}
 
-  -- [[ Actual Loader Function ]]-- =========================================================
+  --------------------------------------------------------------------------------
+  -- [[ Actual Loader Function ]] --
+  --------------------------------------------------------------------------------
 
   function buildLevel()
     curRow = 0
@@ -567,11 +542,15 @@ end
 
 
 
---[[ Load Start Screen ]]--  =========================================================
+--------------------------------------------------------------------------------
+-- [[ Load Start - Screen ]] --
+--------------------------------------------------------------------------------
 
-local testVideo = native.newVideo( cx, cy, 320, 480 )
-testVideo:load( "testVid.mp4", system.DocumentsDirectory )
-testVideo:play()
+-- Video doesn't work anymore because of no PC support 
+
+-- local testVideo = native.newVideo( cx, cy, 320, 480 )
+-- testVideo:load( "testVid.mp4", system.DocumentsDirectory )
+-- testVideo:play()
 
 
 -- PC
@@ -615,7 +594,8 @@ local function ChoosePC(event)
     display.remove( flatOverlay )
     LevelSelect()
     print( "PC platform selected" )
-    Test.LoadWorld()
+    OverWorld.LoadWorld()
+    OverWorld.LoadPlayer()
   end
 end
 
@@ -632,7 +612,9 @@ local function ChooseMobile(event)
   end
 end
 
---[[ Listeners ]]-- =========================================================
+--------------------------------------------------------------------------------
+-- [[ Listeners ]] --
+--------------------------------------------------------------------------------
 
 mbOption:addEventListener("touch", ChooseMobile)
 pcOption:addEventListener("touch", ChoosePC)
