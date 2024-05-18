@@ -42,7 +42,7 @@ settings =
 	--
 	plugins =
 	{
-
+		--{["plugin.theora"] = { publisherId = "com.xibalbastudios" }
 	},
 
 	--
