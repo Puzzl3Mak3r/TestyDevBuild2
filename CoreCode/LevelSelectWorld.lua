@@ -24,6 +24,10 @@ local pressedKeys     = {}
 
 -- [[ PC controls ]]
 
+function startLevel()
+
+end
+
 function onEnterFrame(event)
     -- Up and Down
     if pressedKeys["w"] and pressedKeys["s"] then
@@ -42,7 +46,9 @@ function onEnterFrame(event)
     end
 
     -- Enter Level
-    -- if pressedKeys["return"] then
+    if pressedKeys["space"] then
+        startLevel()
+    end
 end
 function onKeyEvent(event)
     if event.phase == "down" then
