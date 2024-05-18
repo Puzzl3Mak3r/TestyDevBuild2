@@ -45,10 +45,11 @@ function onEnterFrame(event)
         LevelPlayer.x = LevelPlayer.x + Speed
     end
 
-    -- Enter Level
-    if pressedKeys["space"] then
-        startLevel()
-    end
+    -- -- Enter Level
+    -- if pressedKeys["space"] then
+    --     startLevel()
+    -- end
+    -- Maybe use a hover and click event to start the level
 end
 function onKeyEvent(event)
     if event.phase == "down" then
@@ -140,7 +141,6 @@ function LoadWorldSelectPlayer(option)
         LevelPlayer = display.newRect( spawnX, spanwnY, 70, 70 )
         LevelPlayer.fill = {1,1,0.5}
         if platform == "pc" then
-            print("QWERTYUIOP{}")
             Runtime:addEventListener( "enterFrame", onEnterFrame )
             Runtime:addEventListener( "key", onKeyEvent )
         end

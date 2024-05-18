@@ -52,7 +52,7 @@ local function levelSelected(event)
         removeLevels()
         levelchosen = "Loader"
         removeLevels()
-       LevelSelectWorld.unLoadWorld()
+        LevelSelectWorld.unLoadWorld()
     end
 end
 
